@@ -1,9 +1,9 @@
-// import { api } from '../../../lib/axios';
 import { api } from '../../../lib/axios';
 import type { FetchGamesResponse } from '../types';
 
-export const getGames = async (): Promise<FetchGamesResponse> => {
-  // O axios já injeta a baseURL e a key configuradas no passo 3
-  const response = await api.get<FetchGamesResponse>('/games');
+export const getGames = async (pageParam?: number): Promise<FetchGamesResponse> => {
+  const response = await api.get<FetchGamesResponse>('/games', {
+    params: pageParam ? { page: pageParam } : undefined,
+  });
   return response.data;
 };

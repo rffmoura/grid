@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type { Game } from '../../features/games/types';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import GameCard from './GameCard';
 
 interface SearchModalProps {
@@ -8,6 +9,9 @@ interface SearchModalProps {
   results: Game[];
   isLoading: boolean;
   searchQuery: string;
+  fetchNextPage: () => void;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
 }
 
 export function SearchModal({
@@ -16,7 +20,15 @@ export function SearchModal({
   results,
   isLoading,
   searchQuery,
+  fetchNextPage,
+  hasNextPage,
+  isFetchingNextPage,
 }: SearchModalProps) {
+  const loadMoreRef = useIntersectionObserver({
+    onIntersect: fetchNextPage,
+    enabled: isOpen && hasNextPage && !isFetchingNextPage,
+  });
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -49,7 +61,7 @@ export function SearchModal({
           </h2>
           <button
             onClick={onClose}
-            className='p-2 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors'
+            className='p-2 text-neutral-400 cursor-pointer hover:text-white hover:bg-neutral-800 rounded-lg transition-colors'
           >
             <svg
               xmlns='http://www.w3.org/2000/svg'
@@ -79,13 +91,22 @@ export function SearchModal({
               Nenhum jogo encontrado para "{searchQuery}"
             </div>
           ) : (
-            <div className='grid grid-cols-4 gap-4'>
-              {results.map((game) => (
-                <div key={game.id} onClick={onClose}>
-                  <GameCard {...game} />
-                </div>
-              ))}
-            </div>
+            <>
+              <div className='grid grid-cols-4 gap-4'>
+                {results.map((game) => (
+                  <div key={game.id} onClick={onClose}>
+                    <GameCard {...game} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Loader / Trigger para carregar mais */}
+              <div ref={loadMoreRef} className='flex justify-center py-8'>
+                {isFetchingNextPage && (
+                  <div className='w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin' />
+                )}
+              </div>
+            </>
           )}
         </div>
       </div>

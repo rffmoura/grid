@@ -1,12 +1,21 @@
 import { useGames } from '../../features/games/hooks/useGames';
+import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import GameCard from '../../components/ui/GameCard';
 
 export function Home() {
-  const { data } = useGames();
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useGames();
+
+  const loadMoreRef = useIntersectionObserver({
+    onIntersect: fetchNextPage,
+    enabled: hasNextPage && !isFetchingNextPage,
+  });
+
+  const games = data?.pages.flatMap((page) => page.results) ?? [];
+
   return (
     <div>
       <div className='w-full flex'>
-        <div className='w-[10%] p-10'>
+        <div className='w-[16%] p-10'>
           <h2 className='mb-2 font-bold'>Sort By</h2>
           <p>Popularity</p>
           <p>Release Date</p>
@@ -25,9 +34,16 @@ export function Home() {
         <div className='border border-neutral-800' />
         <div className='w-[90%] p-10'>
           <div className='grid grid-cols-5 gap-4'>
-            {data?.results.map((game) => (
-              <GameCard {...game} />
+            {games.map((game) => (
+              <GameCard key={game.id} {...game} />
             ))}
+          </div>
+
+          {/* Loader / Trigger para carregar mais */}
+          <div ref={loadMoreRef} className='flex justify-center py-8'>
+            {isFetchingNextPage && (
+              <div className='w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin' />
+            )}
           </div>
         </div>
       </div>

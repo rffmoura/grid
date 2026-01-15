@@ -8,8 +8,6 @@ export const MainLayout = () => {
     <div className='min-h-screen w-full'>
       {/* Navbar Provisória */}
       <header className='p-4 border-b border-neutral-800 flex justify-between items-center'>
-        {/* <h1 className='text-2xl font-bold text-purple-500'>GDA</h1> */}
-        {/* <Logo /> */}
         <img width={80} src={logo} />
         <SearchInput />
         <nav className='space-x-4'>

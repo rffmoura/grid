@@ -6,7 +6,8 @@ import { useSearchGames } from '../../features/games/hooks/useSearchGames';
 export function SearchInput() {
   const [query, setQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { data, isLoading, isDebouncing } = useSearchGames(query);
+  const { data, isLoading, isDebouncing, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useSearchGames(query);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -40,6 +41,8 @@ export function SearchInput() {
     </svg>
   );
 
+  const results = data?.pages.flatMap((page) => page.results) ?? [];
+
   return (
     <>
       <div className='relative z-60'>
@@ -55,9 +58,12 @@ export function SearchInput() {
       <SearchModal
         isOpen={isModalOpen}
         onClose={handleClose}
-        results={data?.results ?? []}
+        results={results}
         isLoading={isLoading || isDebouncing}
         searchQuery={query}
+        fetchNextPage={fetchNextPage}
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
       />
     </>
   );
