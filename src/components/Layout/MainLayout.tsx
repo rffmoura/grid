@@ -18,7 +18,7 @@ export const MainLayout = () => {
       </header>
 
       {/* Aqui é onde as páginas (Home, Details, etc) vão aparecer */}
-      <main className='container mx-auto p-4'>
+      <main className=''>
         <Outlet />
       </main>
 
