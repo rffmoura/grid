@@ -1,12 +1,16 @@
 // src/components/Layout/MainLayout.tsx
 import { Outlet } from 'react-router-dom';
+// import { Logo } from '../../assets/Logo';
+import logo from '../../assets/logo.png';
 
 export const MainLayout = () => {
   return (
     <div className='min-h-screen w-full'>
       {/* Navbar Provisória */}
       <header className='p-4 border-b border-neutral-800 flex justify-between items-center'>
-        <h1 className='text-2xl font-bold text-purple-500'>GDA</h1>
+        {/* <h1 className='text-2xl font-bold text-purple-500'>GDA</h1> */}
+        {/* <Logo /> */}
+        <img width={80} src={logo} />
         <nav className='space-x-4'>
           <a href='/' className='hover:text-purple-400'>
             Home
