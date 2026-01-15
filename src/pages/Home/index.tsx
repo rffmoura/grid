@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { useGames } from '../../features/games/hooks/useGames';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
+import type { Game } from '../../features/games/types';
 import GameCard from '../../components/ui/GameCard';
+import { GameCardMobile } from '../../components/ui/GameCardMobile';
+import { GamePreviewModal } from '../../components/ui/GamePreviewModal';
 
 export function Home() {
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = useGames();
+  const [selectedGame, setSelectedGame] = useState<Game | null>(null);
 
   const loadMoreRef = useIntersectionObserver({
     onIntersect: fetchNextPage,
@@ -15,7 +20,8 @@ export function Home() {
   return (
     <div>
       <div className='w-full flex'>
-        <div className='w-[16%] p-10'>
+        {/* Sidebar - escondida em mobile */}
+        <div className='hidden lg:block w-[16%] p-10'>
           <h2 className='mb-2 font-bold'>Sort By</h2>
           <p>Popularity</p>
           <p>Release Date</p>
@@ -31,11 +37,21 @@ export function Home() {
           <p>RPG</p>
           <p>Indie</p>
         </div>
-        <div className='border border-neutral-800' />
-        <div className='w-[90%] p-10'>
-          <div className='grid grid-cols-5 gap-4'>
+        <div className='hidden lg:block border border-neutral-800' />
+
+        {/* Conteúdo principal */}
+        <div className='w-full lg:w-[90%] p-4 lg:p-10'>
+          {/* Grid Desktop - 5 colunas */}
+          <div className='hidden md:grid grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'>
             {games.map((game) => (
               <GameCard key={game.id} {...game} />
+            ))}
+          </div>
+
+          {/* Grid Mobile - 2 colunas */}
+          <div className='grid md:hidden grid-cols-2 gap-3'>
+            {games.map((game) => (
+              <GameCardMobile key={game.id} game={game} onClick={() => setSelectedGame(game)} />
             ))}
           </div>
 
@@ -47,6 +63,13 @@ export function Home() {
           </div>
         </div>
       </div>
+
+      {/* Modal de preview para mobile */}
+      <GamePreviewModal
+        game={selectedGame}
+        isOpen={!!selectedGame}
+        onClose={() => setSelectedGame(null)}
+      />
     </div>
   );
 }

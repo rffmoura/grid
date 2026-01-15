@@ -11,10 +11,10 @@ export const MainLayout = () => {
         <img width={80} src={logo} />
         <SearchInput />
         <nav className='space-x-4'>
-          <a href='/' className='hover:text-purple-400'>
+          <a href='/' className='hover:text-purple-400 hidden lg:inline'>
             Home
           </a>
-          <a href='/library' className='hover:text-purple-400'>
+          <a href='/library' className='hover:text-purple-400 hidden lg:inline'>
             Library
           </a>
         </nav>
