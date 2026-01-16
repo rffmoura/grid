@@ -166,3 +166,58 @@ export interface FetchScreenshotsResponse {
   count: number;
   results: GameScreenshot[];
 }
+
+// Filter types
+export type SortOption = '-added' | '-rating' | '-released' | '-metacritic' | 'name' | '-name';
+
+export interface SortOptionConfig {
+  value: SortOption;
+  label: string;
+}
+
+export interface PlatformFilterConfig {
+  id: number;
+  label: string;
+  slug: string;
+}
+
+export interface GenreFilterConfig {
+  slug: string;
+  label: string;
+}
+
+export interface GameFilters {
+  ordering?: SortOption;
+  parent_platforms?: number;
+  genres?: string;
+}
+
+// Filter options configuration
+export const SORT_OPTIONS: SortOptionConfig[] = [
+  { value: '-added', label: 'Popularity' },
+  { value: '-metacritic', label: 'Metacritic' },
+  { value: 'name', label: 'Name (A-Z)' },
+  { value: '-name', label: 'Name (Z-A)' },
+];
+
+export const PLATFORM_OPTIONS: PlatformFilterConfig[] = [
+  { id: 1, label: 'PC', slug: 'pc' },
+  { id: 2, label: 'PlayStation', slug: 'playstation' },
+  { id: 3, label: 'Xbox', slug: 'xbox' },
+  { id: 7, label: 'Nintendo', slug: 'nintendo' },
+];
+
+export const GENRE_OPTIONS: GenreFilterConfig[] = [
+  { slug: 'action', label: 'Action' },
+  { slug: 'rpg', label: 'RPG' },
+  { slug: 'indie', label: 'Indie' },
+  { slug: 'adventure', label: 'Adventure' },
+  { slug: 'strategy', label: 'Strategy' },
+  { slug: 'shooter', label: 'Shooter' },
+  { slug: 'simulation', label: 'Simulation' },
+  { slug: 'puzzle', label: 'Puzzle' },
+  { slug: 'racing', label: 'Racing' },
+  { slug: 'sports', label: 'Sports' },
+  { slug: 'fighting', label: 'Fighting' },
+  { slug: 'platformer', label: 'Platformer' },
+];

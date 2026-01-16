@@ -1,10 +1,11 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { getGames } from '../api/getGames';
+import type { GameFilters } from '../types';
 
-export const useGames = () => {
+export const useGames = (filters?: GameFilters) => {
   return useInfiniteQuery({
-    queryKey: ['games'],
-    queryFn: ({ pageParam }) => getGames(pageParam),
+    queryKey: ['games', filters],
+    queryFn: ({ pageParam }) => getGames(pageParam, filters),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (!lastPage.next) return undefined;

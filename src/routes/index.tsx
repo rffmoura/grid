@@ -4,6 +4,7 @@ import { MainLayout } from '../components/Layout/MainLayout';
 import { Home } from '../pages/Home';
 import { GameDetails } from '../pages/GameDetails';
 import { MyLibrary } from '../pages/MyLibrary';
+import { Account } from '../pages/Account';
 
 export const router = createBrowserRouter([
   {
@@ -24,6 +25,10 @@ export const router = createBrowserRouter([
       {
         path: '/library',
         element: <MyLibrary />,
+      },
+      {
+        path: '/account',
+        element: <Account />,
       },
     ],
   },
