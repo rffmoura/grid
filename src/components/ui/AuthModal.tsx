@@ -34,8 +34,9 @@ export const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
         if (error) throw error;
         onClose(); // Fecha modal ao logar com sucesso
       }
-    } catch (error: any) {
-      setMessage({ type: 'error', text: error.message || 'Ocorreu um erro' });
+    } catch (error: unknown) {
+      console.error('error', error);
+      setMessage({ type: 'error', text: 'Ocorreu um erro' });
     } finally {
       setLoading(false);
     }

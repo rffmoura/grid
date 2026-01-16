@@ -5,10 +5,10 @@ import { SearchInput } from '../ui/SearchInput';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 import { AuthModal } from '../ui/AuthModal';
+import { Button } from '../ui/Button';
 
 export const MainLayout = () => {
   const { user, signOut } = useAuth();
-  console.log('user', user);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   return (
@@ -30,21 +30,15 @@ export const MainLayout = () => {
                 <div className='w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold uppercase'>
                   {user.email?.charAt(0)}
                 </div>
-                <button
-                  onClick={signOut}
-                  className='bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded text-sm font-bold transition'
-                >
+                <Button onClick={signOut} variant='danger' size='sm'>
                   Sair
-                </button>
+                </Button>
               </div>
             </>
           ) : (
-            <button
-              onClick={() => setIsAuthModalOpen(true)}
-              className='bg-purple-600 cursor-pointer hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-bold transition'
-            >
+            <Button onClick={() => setIsAuthModalOpen(true)} variant='primary' size='lg'>
               Sign In
-            </button>
+            </Button>
           )}
         </nav>
       </header>

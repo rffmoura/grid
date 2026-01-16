@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import type { Game } from '../../features/games/types';
 import { useIntersectionObserver } from '../../hooks/useIntersectionObserver';
 import GameCard from './GameCard';
+import { Button } from './Button';
+import { CloseIcon } from '../../assets/icons/CloseIcon';
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -59,25 +61,9 @@ export function SearchModal({
           <h2 className='text-lg font-semibold'>
             {isLoading ? 'Buscando...' : `Resultados para "${searchQuery}" (${results.length})`}
           </h2>
-          <button
-            onClick={onClose}
-            className='p-2 text-neutral-400 cursor-pointer hover:text-white hover:bg-neutral-800 rounded-lg transition-colors'
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              width='20'
-              height='20'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-            >
-              <line x1='18' y1='6' x2='6' y2='18'></line>
-              <line x1='6' y1='6' x2='18' y2='18'></line>
-            </svg>
-          </button>
+          <Button onClick={onClose} variant='icon' size='icon'>
+            <CloseIcon />
+          </Button>
         </div>
 
         {/* Content */}

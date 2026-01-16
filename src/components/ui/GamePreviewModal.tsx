@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Game } from '../../features/games/types';
 import { getUniquePlatforms } from '../../utils/getUniquePlatforms';
+import { CloseIcon } from '../../assets/icons/CloseIcon';
+import { Button } from './Button';
 
 interface GamePreviewModalProps {
   game: Game | null;
@@ -51,25 +53,9 @@ export function GamePreviewModal({ game, isOpen, onClose }: GamePreviewModalProp
           style={{ backgroundImage: `url(${game.background_image})` }}
         >
           {/* Botão fechar */}
-          <button
-            onClick={onClose}
-            className='absolute top-3 right-3 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors'
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              width='20'
-              height='20'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-              strokeLinecap='round'
-              strokeLinejoin='round'
-            >
-              <line x1='18' y1='6' x2='6' y2='18'></line>
-              <line x1='6' y1='6' x2='18' y2='18'></line>
-            </svg>
-          </button>
+          <Button onClick={onClose} variant='icon' size='icon'>
+            <CloseIcon />
+          </Button>
 
           {/* Metacritic */}
           {game.metacritic && (
@@ -119,12 +105,9 @@ export function GamePreviewModal({ game, isOpen, onClose }: GamePreviewModalProp
           </div>
 
           {/* Botão Ver Detalhes */}
-          <button
-            onClick={handleViewDetails}
-            className='w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-xl font-semibold transition-colors'
-          >
+          <Button fullWidth onClick={handleViewDetails} variant='primary'>
             Ver mais detalhes
-          </button>
+          </Button>
         </div>
       </div>
     </div>

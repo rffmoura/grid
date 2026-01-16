@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useGameById } from '../../features/games/hooks/useGameById';
 import { useGameScreenshots } from '../../features/games/hooks/useGameScreenshots';
 import { getUniquePlatforms } from '../../utils/getUniquePlatforms';
+import { Button } from '../../components/ui/Button';
 
 export function GameDetails() {
   const { id } = useParams();
@@ -74,7 +75,7 @@ export function GameDetails() {
           </div>
 
           {/* Add to Library Button */}
-          <button className='hidden md:flex items-center gap-2 px-8 py-3 bg-white text-black font-semibold rounded-lg hover:bg-neutral-200 transition-colors'>
+          <Button variant='secondary'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               width='20'
@@ -87,7 +88,7 @@ export function GameDetails() {
               <path d='M12 5v14M5 12h14' />
             </svg>
             Add to Library
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -300,10 +301,7 @@ export function GameDetails() {
               <h2 className='text-2xl font-bold'>Media</h2>
               {screenshots.length > 1 && (
                 <div className='flex gap-2'>
-                  <button
-                    onClick={prevScreenshot}
-                    className='p-2 bg-neutral-800 rounded-full hover:bg-neutral-700 transition-colors'
-                  >
+                  <Button onClick={prevScreenshot} variant='icon' size='icon'>
                     <svg
                       xmlns='http://www.w3.org/2000/svg'
                       width='20'
@@ -315,11 +313,8 @@ export function GameDetails() {
                     >
                       <path d='M15 18l-6-6 6-6' />
                     </svg>
-                  </button>
-                  <button
-                    onClick={nextScreenshot}
-                    className='p-2 bg-neutral-800 rounded-full hover:bg-neutral-700 transition-colors'
-                  >
+                  </Button>
+                  <Button variant='icon' size='icon' onClick={nextScreenshot}>
                     <svg
                       xmlns='http://www.w3.org/2000/svg'
                       width='20'
@@ -331,7 +326,7 @@ export function GameDetails() {
                     >
                       <path d='M9 18l6-6-6-6' />
                     </svg>
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -403,7 +398,7 @@ export function GameDetails() {
 
       {/* Mobile Add to Library Button */}
       <div className='md:hidden fixed bottom-0 left-0 right-0 p-4 bg-neutral-900 border-t border-neutral-800'>
-        <button className='w-full flex items-center justify-center gap-2 py-3 bg-white text-black font-semibold rounded-lg'>
+        <Button variant='secondary'>
           <svg
             xmlns='http://www.w3.org/2000/svg'
             width='20'
@@ -416,7 +411,7 @@ export function GameDetails() {
             <path d='M12 5v14M5 12h14' />
           </svg>
           Add to Library
-        </button>
+        </Button>
       </div>
     </div>
   );
