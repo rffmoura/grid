@@ -1,21 +1,26 @@
 import type { Platform } from '../features/games/types';
+import playstationIcon from '../assets/playstation.png';
+import xboxIcon from '../assets/xbox.png';
+import nintendoIcon from '../assets/nintendo.png';
+import windowsIcon from '../assets/windows.png';
+import macosIcon from '../assets/macos.png';
 
 const platformConfig: Record<string, { family: string; image: string }> = {
   // Slugs específicos (do endpoint /games)
-  playstation5: { family: 'playstation', image: '/src/assets/playstation.png' },
-  playstation4: { family: 'playstation', image: '/src/assets/playstation.png' },
-  playstation3: { family: 'playstation', image: '/src/assets/playstation.png' },
-  'xbox-series-x': { family: 'xbox', image: '/src/assets/xbox.png' },
-  'xbox-one': { family: 'xbox', image: '/src/assets/xbox.png' },
-  xbox360: { family: 'xbox', image: '/src/assets/xbox.png' },
-  'nintendo-switch': { family: 'nintendo', image: '/src/assets/nintendo.png' },
-  pc: { family: 'pc', image: '/src/assets/windows.png' },
-  macos: { family: 'macos', image: '/src/assets/macos.png' },
+  playstation5: { family: 'playstation', image: playstationIcon },
+  playstation4: { family: 'playstation', image: playstationIcon },
+  playstation3: { family: 'playstation', image: playstationIcon },
+  'xbox-series-x': { family: 'xbox', image: xboxIcon },
+  'xbox-one': { family: 'xbox', image: xboxIcon },
+  xbox360: { family: 'xbox', image: xboxIcon },
+  'nintendo-switch': { family: 'nintendo', image: nintendoIcon },
+  pc: { family: 'pc', image: windowsIcon },
+  macos: { family: 'macos', image: macosIcon },
 
   // Slugs genéricos (do endpoint /games/{id} parent_platforms)
-  playstation: { family: 'playstation', image: '/src/assets/playstation.png' },
-  xbox: { family: 'xbox', image: '/src/assets/xbox.png' },
-  nintendo: { family: 'nintendo', image: '/src/assets/nintendo.png' },
+  playstation: { family: 'playstation', image: playstationIcon },
+  xbox: { family: 'xbox', image: xboxIcon },
+  nintendo: { family: 'nintendo', image: nintendoIcon },
 };
 
 export const getUniquePlatforms = (platforms: { platform: Platform }[]) => {
