@@ -1,14 +1,197 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGameById } from '../../features/games/hooks/useGameById';
 import { useGameScreenshots } from '../../features/games/hooks/useGameScreenshots';
 import { getUniquePlatforms } from '../../utils/getUniquePlatforms';
 import { Button } from '../../components/ui/Button';
+import { PlusIcon } from '../../assets/icons/PlusIcon';
+import { useAuth } from '../../context/AuthContext';
+import { useLibrary } from '../../features/library/hooks/useLibrary';
+import type { LibraryGame } from '../../features/library/api';
+import type { Game } from '../../features/games/types';
 
+// --- Helper 1: Formatar Requisitos (Já existia) ---
+const formatRequirements = (requirements: string) => {
+  if (!requirements) return null;
+  let cleaned = requirements.replace(/Additional Notes:?.*$/i, '');
+  cleaned = cleaned.replace(/^(Minimum:|Recommended:)\s*/i, '');
+  const keys = ['OS', 'Processor', 'Memory', 'Graphics', 'Storage', 'Sound Card', 'DirectX'];
+  keys.forEach((key) => {
+    const regex = new RegExp(`(${key}):`, 'g');
+    cleaned = cleaned.replace(regex, `<br/><strong class="text-purple-400">$1:</strong>`);
+  });
+  return cleaned;
+};
+
+// --- Helper 2: Remover Espanhol/Outras línguas (NOVO) ---
+const cleanDescription = (html: string) => {
+  if (!html) return '';
+
+  // Lista de palavras que geralmente indicam o início de outra língua na RAWG
+  const stopMarkers = [
+    '<p>Español',
+    '<p>En Español',
+    'Español:',
+    '<strong>Español',
+    '<p>Deutsch',
+    '<p>Français',
+    '<p>Italiano',
+    '<p>Pусский',
+    '<h1>Español',
+  ];
+
+  let cutIndex = html.length;
+
+  // Procura onde começa o primeiro marcador de língua estrangeira
+  stopMarkers.forEach((marker) => {
+    const index = html.indexOf(marker);
+    if (index !== -1 && index < cutIndex) {
+      cutIndex = index;
+    }
+  });
+
+  // Retorna apenas o texto do início até antes do marcador
+  return html.substring(0, cutIndex);
+};
+
+// --- Sub-componente LibraryButton (Igual) ---
+const LibraryButton = ({ game, className = '' }: { game: Game; className?: string }) => {
+  const { user } = useAuth();
+  const { games, addGame, removeGame, isAdding } = useLibrary();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const savedGame = games.find((g) => g.game_id === game.id);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleAction = (status: LibraryGame['status']) => {
+    addGame({
+      id: game.id,
+      name: game.name,
+      image: game.background_image,
+      status: status,
+    });
+    setIsOpen(false);
+  };
+
+  const statusOptions: { label: string; value: LibraryGame['status']; color: string }[] = [
+    { label: 'Playing', value: 'playing', color: 'bg-green-500' },
+    { label: 'Backlog', value: 'backlog', color: 'bg-gray-500' },
+    { label: 'Wishlist', value: 'wishlist', color: 'bg-blue-500' },
+    { label: 'Completed', value: 'completed', color: 'bg-yellow-500' },
+  ];
+
+  if (!user) {
+    return (
+      <div className={className}>
+        <Button
+          variant='secondary'
+          onClick={() => alert('Por favor, faça login no topo da página para salvar jogos.')}
+        >
+          <PlusIcon />
+          Login to Add
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`relative ${className}`} ref={dropdownRef}>
+      <Button
+        variant={savedGame ? 'primary' : 'secondary'}
+        className={
+          savedGame ? 'bg-purple-600 hover:bg-purple-700 text-white border-transparent' : ''
+        }
+        onClick={() => setIsOpen(!isOpen)}
+        disabled={isAdding}
+      >
+        {isAdding ? (
+          <span className='animate-pulse'>Saving...</span>
+        ) : savedGame ? (
+          <>
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              width='20'
+              height='20'
+              viewBox='0 0 24 24'
+              fill='none'
+              stroke='currentColor'
+              strokeWidth='2'
+              strokeLinecap='round'
+              strokeLinejoin='round'
+            >
+              <polyline points='20 6 9 17 4 12'></polyline>
+            </svg>
+            <span className='capitalize'>{savedGame.status}</span>
+          </>
+        ) : (
+          <>
+            <PlusIcon />
+            Add to Library
+          </>
+        )}
+      </Button>
+
+      {isOpen && (
+        <div className='absolute top-full mt-2 w-48 bg-gray-800 border border-gray-700 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-100 right-0 md:left-0 md:right-auto'>
+          <div className='p-1'>
+            {statusOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleAction(option.value)}
+                className={`w-full text-left px-4 py-2.5 text-sm text-gray-200 hover:bg-gray-700 rounded-lg flex items-center gap-3 transition-colors ${savedGame?.status === option.value ? 'bg-gray-700 font-bold text-white' : ''}`}
+              >
+                <span className={`w-2 h-2 rounded-full ${option.color}`} />
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {savedGame && (
+            <div className='border-t border-gray-700 p-1'>
+              <button
+                onClick={() => {
+                  removeGame(game.id);
+                  setIsOpen(false);
+                }}
+                className='w-full text-left px-4 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg flex items-center gap-2 transition-colors'
+              >
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  width='16'
+                  height='16'
+                  viewBox='0 0 24 24'
+                  fill='none'
+                  stroke='currentColor'
+                  strokeWidth='2'
+                >
+                  <path d='M3 6h18'></path>
+                  <path d='M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6'></path>
+                  <path d='M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2'></path>
+                </svg>
+                Remove from Library
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- Componente Principal ---
 export function GameDetails() {
   const { id } = useParams();
   const gameId = Number(id);
   const [currentScreenshot, setCurrentScreenshot] = useState(0);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const { data: game, isLoading: isLoadingGame } = useGameById(gameId);
   const { data: screenshotsData, isLoading: isLoadingScreenshots } = useGameScreenshots(gameId);
@@ -22,7 +205,7 @@ export function GameDetails() {
   }
 
   if (!game) {
-    return <div className='p-4'>Jogo não encontrado</div>;
+    return <div className='p-4 text-white'>Jogo não encontrado</div>;
   }
 
   const screenshots = screenshotsData?.results ?? [];
@@ -37,275 +220,140 @@ export function GameDetails() {
     setCurrentScreenshot((prev) => (prev - 1 + screenshots.length) % screenshots.length);
   };
 
+  // APLICAÇÃO DA LIMPEZA DE TEXTO AQUI
+  const finalDescription = cleanDescription(game.description);
+
   return (
-    <div className='min-h-screen'>
+    <div className='min-h-screen text-gray-100 pb-20'>
       {/* Hero Section */}
       <div
-        className='relative w-full h-100 bg-cover bg-center'
+        className='relative w-full h-[60vh] md:h-[70vh] bg-cover bg-center'
         style={{ backgroundImage: `url(${game.background_image})` }}
       >
         <div className='absolute inset-0 bg-gradient-to-t from-neutral-900 via-neutral-900/50 to-transparent' />
 
-        <div className='absolute bottom-0 left-0 right-0 p-8 flex items-end gap-6'>
-          {/* Thumbnail */}
+        <div className='absolute bottom-0 left-0 right-0 p-6 md:p-12 max-w-7xl mx-auto flex items-end gap-8'>
           <img
             src={game.background_image}
             alt={game.name}
-            className='w-32 h-44 object-cover rounded-lg shadow-xl hidden md:block'
+            className='w-40 h-56 object-cover rounded-xl shadow-2xl hidden md:block border-2 border-white/10'
           />
 
-          {/* Title */}
-          <div className='flex-1'>
-            <h1 className='text-4xl md:text-5xl font-bold mb-2'>{game.name}</h1>
-            <div className='flex gap-2 items-center'>
-              {platforms.map((platform) => (
-                <img
-                  key={platform.family}
-                  src={platform.image}
-                  alt={platform.name}
-                  className='w-5 h-5'
-                />
-              ))}
+          <div className='flex-1 mb-2'>
+            <div className='flex gap-2 mb-4'>
               {game.metacritic && (
-                <span className='ml-4 px-3 py-1 bg-lime-600 rounded-lg font-bold text-sm'>
-                  {game.metacritic}
+                <span
+                  className={`px-2 py-0.5 rounded text-xs font-bold border ${
+                    game.metacritic >= 75
+                      ? 'border-green-500 text-green-400 bg-green-500/10'
+                      : 'border-yellow-500 text-yellow-400'
+                  }`}
+                >
+                  METASCORE {game.metacritic}
                 </span>
               )}
             </div>
+
+            <h1 className='text-4xl md:text-6xl font-black mb-4 tracking-tight leading-none text-white drop-shadow-lg'>
+              {game.name}
+            </h1>
+
+            <div className='flex gap-4 items-center text-gray-300'>
+              <div className='flex gap-3'>
+                {platforms.map((platform) => (
+                  <img
+                    key={platform.family}
+                    src={platform.image}
+                    alt={platform.name}
+                    className='w-6 h-6 opacity-80 hover:opacity-100 transition'
+                    title={platform.name}
+                  />
+                ))}
+              </div>
+              <span className='text-gray-600'>|</span>
+              <span>{game.released}</span>
+              <span className='text-gray-600'>|</span>
+              <span>{game.developers?.[0]?.name}</span>
+            </div>
           </div>
 
-          {/* Add to Library Button */}
-          <Button variant='secondary'>
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              width='20'
-              height='20'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-            >
-              <path d='M12 5v14M5 12h14' />
-            </svg>
-            Add to Library
-          </Button>
+          <LibraryButton game={game} className='hidden md:block' />
         </div>
       </div>
 
-      {/* Content */}
-      <div className='p-4 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8'>
-        {/* Left Column */}
-        <div className='space-y-8'>
+      <div className='max-w-7xl mx-auto p-4 md:p-12 grid grid-cols-1 lg:grid-cols-3 gap-12'>
+        <div className='lg:col-span-2 space-y-12'>
           {/* About Section */}
           <section>
-            <h2 className='text-2xl font-bold mb-4'>About</h2>
-            <p className='text-neutral-300 leading-relaxed'>
-              {game.description_raw || 'No description available.'}
-            </p>
+            <h2 className='text-2xl font-bold mb-6 flex items-center gap-2'>
+              <span className='w-1 h-6 bg-purple-500 rounded-full'></span>
+              About
+            </h2>
+            <div className='bg-gray-800/30 p-6 rounded-xl border border-gray-700/30'>
+              <div
+                className={`text-gray-300 leading-relaxed space-y-4 text-lg transition-all duration-300 relative ${!isDescExpanded ? 'max-h-[300px] overflow-hidden mask-linear-gradient' : ''}`}
+              >
+                <div dangerouslySetInnerHTML={{ __html: finalDescription }} />
 
-            {/* Info Grid */}
-            <div className='grid grid-cols-3 gap-4 mt-6'>
-              <div>
-                <p className='text-neutral-500 text-sm'>Release Date</p>
-                <p className='font-semibold'>{game.released || 'TBA'}</p>
+                {/* Gradiente Corrigido: Agora usando neutral-900 para ficar "preto" e não azulado */}
+                {!isDescExpanded && (
+                  <div className='absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-neutral-900 via-neutral-900/80 to-transparent flex items-end justify-center'></div>
+                )}
               </div>
-              <div>
-                <p className='text-neutral-500 text-sm'>Platforms</p>
-                <p className='font-semibold'>
-                  {game.platforms.map((p) => p.platform.name).join(', ')}
-                </p>
-              </div>
-              <div>
-                <p className='text-neutral-500 text-sm'>Developer</p>
-                <p className='font-semibold'>
-                  {game.developers?.map((d) => d.name).join(', ') || 'Unknown'}
-                </p>
-              </div>
-            </div>
-          </section>
 
-          {/* Details Section */}
-          <section>
-            <h2 className='text-2xl font-bold mb-4'>Details</h2>
-            <div className='grid grid-cols-2 gap-4'>
-              <div>
-                <p className='text-neutral-500 text-sm'>Genres</p>
-                <p className='font-semibold'>{game.genres.map((g) => g.name).join(', ')}</p>
-              </div>
-              <div>
-                <p className='text-neutral-500 text-sm'>Publisher</p>
-                <p className='font-semibold'>
-                  {game.publishers?.map((p) => p.name).join(', ') || 'Unknown'}
-                </p>
-              </div>
-              <div>
-                <p className='text-neutral-500 text-sm'>Rating</p>
-                <p className='font-semibold'>{game.rating}/5</p>
-              </div>
-              <div>
-                <p className='text-neutral-500 text-sm'>Playtime</p>
-                <p className='font-semibold'>{game.playtime} hours</p>
-              </div>
-              {game.esrb_rating && (
-                <div>
-                  <p className='text-neutral-500 text-sm'>Age Rating</p>
-                  <p className='font-semibold'>{game.esrb_rating.name}</p>
-                </div>
-              )}
-              {game.achievements_count > 0 && (
-                <div>
-                  <p className='text-neutral-500 text-sm'>Achievements</p>
-                  <p className='font-semibold'>{game.achievements_count}</p>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* Metacritic by Platform */}
-          {game.metacritic_platforms && game.metacritic_platforms.length > 0 && (
-            <section>
-              <h2 className='text-2xl font-bold mb-4'>Metacritic Scores</h2>
-              <div className='flex flex-wrap gap-3'>
-                {game.metacritic_platforms.map((mp) => (
-                  <a
-                    key={mp.platform.slug}
-                    href={mp.url}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors'
-                  >
-                    <span
-                      className={`px-2 py-1 rounded font-bold text-sm ${
-                        mp.metascore >= 75
-                          ? 'bg-lime-600'
-                          : mp.metascore >= 50
-                            ? 'bg-yellow-600'
-                            : 'bg-red-600'
-                      }`}
+              <button
+                onClick={() => setIsDescExpanded(!isDescExpanded)}
+                className='mt-4 text-purple-400 hover:text-purple-300 font-bold uppercase text-sm tracking-wide flex items-center gap-2 mx-auto'
+              >
+                {isDescExpanded ? (
+                  <>
+                    Show Less{' '}
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      width='16'
+                      height='16'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='2'
                     >
-                      {mp.metascore}
-                    </span>
-                    <span className='text-sm'>{mp.platform.name}</span>
-                  </a>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Community & Links */}
-          <section>
-            <h2 className='text-2xl font-bold mb-4'>Community</h2>
-            <div className='flex flex-wrap gap-3'>
-              {game.website && (
-                <a
-                  href={game.website}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='flex items-center gap-2 px-4 py-2 bg-neutral-800 rounded-lg hover:bg-neutral-700 transition-colors'
-                >
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    width='18'
-                    height='18'
-                    viewBox='0 0 24 24'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='2'
-                  >
-                    <circle cx='12' cy='12' r='10' />
-                    <path d='M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z' />
-                  </svg>
-                  <span className='text-sm'>Website</span>
-                </a>
-              )}
-              {game.reddit_url && (
-                <a
-                  href={game.reddit_url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                  className='flex items-center gap-2 px-4 py-2 bg-orange-600/20 text-orange-400 rounded-lg hover:bg-orange-600/30 transition-colors'
-                >
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    width='18'
-                    height='18'
-                    viewBox='0 0 24 24'
-                    fill='currentColor'
-                  >
-                    <path d='M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z' />
-                  </svg>
-                  <span className='text-sm'>Reddit</span>
-                  {game.reddit_count > 0 && (
-                    <span className='text-xs text-orange-300'>({game.reddit_count})</span>
-                  )}
-                </a>
-              )}
-              {game.youtube_count > 0 && (
-                <div className='flex items-center gap-2 px-4 py-2 bg-red-600/20 text-red-400 rounded-lg'>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    width='18'
-                    height='18'
-                    viewBox='0 0 24 24'
-                    fill='currentColor'
-                  >
-                    <path d='M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z' />
-                  </svg>
-                  <span className='text-sm'>YouTube</span>
-                  <span className='text-xs text-red-300'>
-                    ({game.youtube_count.toLocaleString()})
-                  </span>
-                </div>
-              )}
-              {game.twitch_count > 0 && (
-                <div className='flex items-center gap-2 px-4 py-2 bg-purple-600/20 text-purple-400 rounded-lg'>
-                  <svg
-                    xmlns='http://www.w3.org/2000/svg'
-                    width='18'
-                    height='18'
-                    viewBox='0 0 24 24'
-                    fill='currentColor'
-                  >
-                    <path d='M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z' />
-                  </svg>
-                  <span className='text-sm'>Twitch</span>
-                  <span className='text-xs text-purple-300'>({game.twitch_count})</span>
-                </div>
-              )}
+                      <path d='M18 15l-6-6-6 6' />
+                    </svg>
+                  </>
+                ) : (
+                  <>
+                    Read More{' '}
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      width='16'
+                      height='16'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='2'
+                    >
+                      <path d='M6 9l6 6 6-6' />
+                    </svg>
+                  </>
+                )}
+              </button>
             </div>
           </section>
 
-          {/* Tags */}
-          {game.tags && game.tags.length > 0 && (
-            <section>
-              <h2 className='text-2xl font-bold mb-4'>Tags</h2>
-              <div className='flex flex-wrap gap-2'>
-                {game.tags.slice(0, 12).map((tag) => (
-                  <span
-                    key={tag.id}
-                    className='px-3 py-1 bg-neutral-800 rounded-full text-sm text-neutral-300'
-                  >
-                    {tag.name}
-                  </span>
-                ))}
-              </div>
-            </section>
-          )}
-        </div>
-
-        {/* Right Column */}
-        <div className='space-y-8'>
           {/* Media Section */}
           <section>
-            <div className='flex items-center justify-between mb-4'>
-              <h2 className='text-2xl font-bold'>Media</h2>
+            <div className='flex items-center justify-between mb-6'>
+              <h2 className='text-2xl font-bold flex items-center gap-2'>
+                <span className='w-1 h-6 bg-purple-500 rounded-full'></span>
+                Gallery
+              </h2>
               {screenshots.length > 1 && (
                 <div className='flex gap-2'>
                   <Button onClick={prevScreenshot} variant='icon' size='icon'>
                     <svg
                       xmlns='http://www.w3.org/2000/svg'
-                      width='20'
-                      height='20'
+                      width='24'
+                      height='24'
                       viewBox='0 0 24 24'
                       fill='none'
                       stroke='currentColor'
@@ -317,8 +365,8 @@ export function GameDetails() {
                   <Button variant='icon' size='icon' onClick={nextScreenshot}>
                     <svg
                       xmlns='http://www.w3.org/2000/svg'
-                      width='20'
-                      height='20'
+                      width='24'
+                      height='24'
                       viewBox='0 0 24 24'
                       fill='none'
                       stroke='currentColor'
@@ -331,61 +379,68 @@ export function GameDetails() {
               )}
             </div>
 
-            {/* Main Screenshot */}
             {screenshots.length > 0 && (
-              <div className='relative'>
-                <img
-                  src={screenshots[currentScreenshot]?.image}
-                  alt='Screenshot'
-                  className='w-full h-64 object-cover rounded-xl'
-                />
-                <div className='absolute bottom-2 right-2 px-2 py-1 bg-black/70 rounded text-sm'>
-                  {currentScreenshot + 1} / {screenshots.length}
+              <div className='space-y-4'>
+                <div className='relative aspect-video rounded-xl overflow-hidden shadow-2xl bg-gray-800'>
+                  <img
+                    src={screenshots[currentScreenshot]?.image}
+                    alt='Screenshot'
+                    className='w-full h-full object-cover'
+                  />
+                  <div className='absolute bottom-4 right-4 px-3 py-1 bg-black/80 backdrop-blur rounded-full text-xs font-bold'>
+                    {currentScreenshot + 1} / {screenshots.length}
+                  </div>
+                </div>
+
+                <div className='flex gap-3 overflow-x-auto pb-4 scrollbar-hide'>
+                  {screenshots.map((shot, index) => (
+                    <button
+                      key={shot.id}
+                      onClick={() => setCurrentScreenshot(index)}
+                      className={`relative flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden transition-all ${
+                        index === currentScreenshot
+                          ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-gray-900 opacity-100'
+                          : 'opacity-50 hover:opacity-100'
+                      }`}
+                    >
+                      <img src={shot.image} alt='' className='w-full h-full object-cover' />
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
-
-            {/* Thumbnail Strip */}
-            <div className='flex gap-2 mt-4 overflow-x-auto pb-2'>
-              {screenshots.slice(0, 6).map((shot, index) => (
-                <img
-                  key={shot.id}
-                  src={shot.image}
-                  alt='Screenshot thumbnail'
-                  onClick={() => setCurrentScreenshot(index)}
-                  className={`w-24 h-16 object-cover rounded-lg cursor-pointer transition-all ${
-                    index === currentScreenshot
-                      ? 'ring-2 ring-purple-500'
-                      : 'opacity-60 hover:opacity-100'
-                  }`}
-                />
-              ))}
-            </div>
           </section>
 
-          {/* System Requirements Section */}
+          {/* System Requirements (PC) */}
           {pcRequirements && (pcRequirements.minimum || pcRequirements.recommended) && (
             <section>
-              <h2 className='text-2xl font-bold mb-4'>System Requirements</h2>
-              <div className='bg-neutral-800 rounded-xl p-4 space-y-4'>
+              <h2 className='text-2xl font-bold mb-6 flex items-center gap-2'>
+                <span className='w-1 h-6 bg-purple-500 rounded-full'></span>
+                System Requirements (PC)
+              </h2>
+              <div className='grid md:grid-cols-2 gap-6'>
                 {pcRequirements.minimum && (
-                  <div>
-                    <h3 className='font-semibold text-neutral-400 mb-2'>Minimum</h3>
-                    <p
-                      className='text-sm text-neutral-300 whitespace-pre-line'
+                  <div className='bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 hover:border-purple-500/30 transition duration-300'>
+                    <h3 className='text-purple-400 font-bold mb-4 uppercase text-sm tracking-wider border-b border-gray-700 pb-2'>
+                      Minimum
+                    </h3>
+                    <div
+                      className='text-sm text-gray-300 space-y-2 leading-relaxed'
                       dangerouslySetInnerHTML={{
-                        __html: pcRequirements.minimum.replace(/<br\s*\/?>/gi, '\n'),
+                        __html: formatRequirements(pcRequirements.minimum) || '',
                       }}
                     />
                   </div>
                 )}
                 {pcRequirements.recommended && (
-                  <div>
-                    <h3 className='font-semibold text-neutral-400 mb-2'>Recommended</h3>
-                    <p
-                      className='text-sm text-neutral-300 whitespace-pre-line'
+                  <div className='bg-gray-800/50 p-6 rounded-xl border border-gray-700/50 hover:border-green-500/30 transition duration-300'>
+                    <h3 className='text-green-400 font-bold mb-4 uppercase text-sm tracking-wider border-b border-gray-700 pb-2'>
+                      Recommended
+                    </h3>
+                    <div
+                      className='text-sm text-gray-300 space-y-2 leading-relaxed'
                       dangerouslySetInnerHTML={{
-                        __html: pcRequirements.recommended.replace(/<br\s*\/?>/gi, '\n'),
+                        __html: formatRequirements(pcRequirements.recommended) || '',
                       }}
                     />
                   </div>
@@ -394,24 +449,103 @@ export function GameDetails() {
             </section>
           )}
         </div>
+
+        {/* Right Column (Sidebar) */}
+        <div className='space-y-8'>
+          <div className='bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 grid grid-cols-2 gap-6'>
+            <div>
+              <p className='text-gray-500 text-xs uppercase font-bold mb-1'>Rating</p>
+              <p className='text-2xl font-bold text-white flex items-center gap-1'>
+                {game.rating} <span className='text-gray-600 text-lg'>/ 5</span>
+              </p>
+            </div>
+            <div>
+              <p className='text-gray-500 text-xs uppercase font-bold mb-1'>Playtime</p>
+              <p className='text-2xl font-bold text-white'>
+                {game.playtime} <span className='text-sm text-gray-500 font-normal'>hours</span>
+              </p>
+            </div>
+            <div>
+              <p className='text-gray-500 text-xs uppercase font-bold mb-1'>Age Rating</p>
+              <p className='text-lg font-bold text-white'>
+                {game.esrb_rating?.name || 'Not Rated'}
+              </p>
+            </div>
+            <div>
+              <p className='text-gray-500 text-xs uppercase font-bold mb-1'>Release</p>
+              <p className='text-lg font-bold text-white'>{game.released}</p>
+            </div>
+          </div>
+
+          <div>
+            <h3 className='text-gray-400 font-bold mb-3 uppercase text-sm'>Genres</h3>
+            <div className='flex flex-wrap gap-2'>
+              {game.genres.map((g) => (
+                <span
+                  key={g.id}
+                  className='px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition cursor-default border border-gray-700'
+                >
+                  {g.name}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {game.tags && (
+            <div>
+              <h3 className='text-gray-400 font-bold mb-3 uppercase text-sm'>Tags</h3>
+              <div className='flex flex-wrap gap-2'>
+                {game.tags.slice(0, 15).map((t) => (
+                  <span
+                    key={t.id}
+                    className='px-2 py-1 text-xs text-gray-400 bg-gray-800/50 rounded'
+                  >
+                    #{t.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {game.stores && game.stores.length > 0 && (
+            <div>
+              <h3 className='text-gray-400 font-bold mb-3 uppercase text-sm'>Where to Buy</h3>
+              <div className='grid grid-cols-1 gap-2'>
+                {game.stores.map((s) => (
+                  <a
+                    key={s.id}
+                    href={`https://${s.store.domain}`}
+                    target='_blank'
+                    rel='noreferrer'
+                    className='flex items-center justify-between px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-lg transition group'
+                  >
+                    <span className='font-medium text-gray-300 group-hover:text-white'>
+                      {s.store.name}
+                    </span>
+                    <svg
+                      xmlns='http://www.w3.org/2000/svg'
+                      width='16'
+                      height='16'
+                      viewBox='0 0 24 24'
+                      fill='none'
+                      stroke='currentColor'
+                      strokeWidth='2'
+                      className='text-gray-600 group-hover:text-white'
+                    >
+                      <path d='M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6'></path>
+                      <polyline points='15 3 21 3 21 9'></polyline>
+                      <line x1='10' y1='14' x2='21' y2='3'></line>
+                    </svg>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Mobile Add to Library Button */}
-      <div className='md:hidden fixed bottom-0 left-0 right-0 p-4 bg-neutral-900 border-t border-neutral-800'>
-        <Button variant='secondary'>
-          <svg
-            xmlns='http://www.w3.org/2000/svg'
-            width='20'
-            height='20'
-            viewBox='0 0 24 24'
-            fill='none'
-            stroke='currentColor'
-            strokeWidth='2'
-          >
-            <path d='M12 5v14M5 12h14' />
-          </svg>
-          Add to Library
-        </Button>
+      <div className='md:hidden fixed bottom-0 left-0 right-0 p-4 bg-gray-900/90 backdrop-blur border-t border-gray-800 z-50'>
+        <LibraryButton game={game} className='w-full' />
       </div>
     </div>
   );

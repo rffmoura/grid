@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 import { AuthModal } from '../ui/AuthModal';
 import { Button } from '../ui/Button';
+// import Footer from '../ui/Footer';
 
 export const MainLayout = () => {
   const { user, signOut } = useAuth();
@@ -50,9 +51,7 @@ export const MainLayout = () => {
 
       <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
 
-      <footer className='p-8 text-center text-gray-500 text-sm border-t border-gray-800 mt-10'>
-        © 2026 Game Discovery App. Powered by RAWG & Supabase.
-      </footer>
+      {/* <Footer /> */}
     </div>
   );
 };
