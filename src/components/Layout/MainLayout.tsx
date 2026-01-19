@@ -1,6 +1,7 @@
 // src/components/Layout/MainLayout.tsx
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import logo from '../../assets/logo.png';
+// import logo from '../../assets/logo.png';
+import logo2 from '../../assets/newLogo.png';
 import { SearchInput } from '../ui/SearchInput';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
@@ -27,7 +28,7 @@ export const MainLayout = () => {
       {/* Header Desktop */}
       <header className='hidden lg:flex p-4 border-b border-neutral-800 items-center gap-6'>
         <Link to='/' className='hover:opacity-80 transition flex-shrink-0'>
-          <img width={80} src={logo} alt='Logo' />
+          <img width={100} src={logo2} alt='Logo' />
         </Link>
 
         {/* Search - expands to fill available space */}
@@ -91,7 +92,7 @@ export const MainLayout = () => {
 
             {/* Centered Logo */}
             <Link to='/' className='flex-1 flex justify-center hover:opacity-80 transition'>
-              <img width={60} src={logo} alt='Logo' />
+              <img width={60} src={logo2} alt='Logo' />
             </Link>
 
             {/* Search Button */}
