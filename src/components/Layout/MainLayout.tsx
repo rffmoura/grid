@@ -1,12 +1,12 @@
 // src/components/Layout/MainLayout.tsx
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-// import logo from '../../assets/logo.png';
 import logo2 from '../../assets/newLogo.png';
 import { SearchInput } from '../ui/SearchInput';
 import { useAuth } from '../../context/AuthContext';
 import { useState } from 'react';
 import { AuthModal } from '../ui/AuthModal';
 import { Button } from '../ui/Button';
+import { UserDropdownMenu } from '../ui/UserDropdownMenu';
 import { MenuIcon } from '../../assets/icons/MenuIcon';
 import { SearchIcon } from '../../assets/icons/SearchIcon';
 import { CloseIcon } from '../../assets/icons/CloseIcon';
@@ -14,13 +14,12 @@ import { MobileSidebar } from '../ui/MobileSidebar';
 import { BackIcon } from '../../assets/icons/BackIcon';
 
 export const MainLayout = () => {
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-
   const isHomePage = location.pathname === '/';
 
   return (
@@ -36,16 +35,9 @@ export const MainLayout = () => {
           <SearchInput />
         </div>
 
-        <nav className='flex items-center gap-4 flex-shrink-0'>
+        <nav className='flex items-center gap-4 shrink-0'>
           {user ? (
-            <div className='flex items-center gap-3'>
-              <div className='w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center text-white font-bold uppercase'>
-                {user.email?.charAt(0)}
-              </div>
-              <Button onClick={signOut} variant='danger' size='sm'>
-                Sair
-              </Button>
-            </div>
+            <UserDropdownMenu />
           ) : (
             <Button onClick={() => setIsAuthModalOpen(true)} variant='primary' size='md'>
               Sign In
