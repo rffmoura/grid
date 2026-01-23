@@ -92,7 +92,7 @@ export const MainLayout = () => {
 
             {/* Centered Logo */}
             <Link to='/' className='flex-1 flex justify-center hover:opacity-80 transition'>
-              <img width={60} src={logo2} alt='Logo' />
+              <img width={100} src={logo2} alt='Logo' />
             </Link>
 
             {/* Search Button */}
