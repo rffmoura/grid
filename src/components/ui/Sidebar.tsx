@@ -98,7 +98,9 @@ function SectionHeader({
   return (
     <div className='flex items-center gap-2 mb-3'>
       <span className='text-neutral-500'>{icon}</span>
-      <h2 className='text-xs font-semibold text-neutral-500 uppercase tracking-wider'>{title}</h2>
+      <span className='text-xs font-semibold text-neutral-500 uppercase tracking-wider'>
+        {title}
+      </span>
       {count !== undefined && count > 0 && (
         <span className='ml-auto text-xs bg-purple-600/30 text-purple-400 px-1.5 py-0.5 rounded-full'>
           {count}
