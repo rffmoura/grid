@@ -17,10 +17,13 @@ export const useSearchGames = (query: string) => {
     },
     enabled: debouncedQuery.length >= 2,
     staleTime: 1000 * 60 * 5,
+    retry: 1,
+    throwOnError: false,
   });
 
   return {
     ...queryResult,
     isDebouncing,
+    isError: queryResult.isError,
   };
 };

@@ -23,9 +23,11 @@ const platformConfig: Record<string, { family: string; image: string }> = {
   nintendo: { family: 'nintendo', image: nintendoIcon },
 };
 
-export const getUniquePlatforms = (platforms: { platform: Platform }[]) => {
+export const getUniquePlatforms = (platforms: { platform: Platform }[] | null | undefined) => {
   const seen = new Set<string>();
   const result: { family: string; image: string; name: string }[] = [];
+
+  if (!platforms) return result;
 
   for (const p of platforms) {
     const config = platformConfig[p.platform.slug];

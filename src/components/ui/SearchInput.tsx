@@ -7,7 +7,7 @@ export function SearchInput() {
   const [query, setQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
-  const { data, isLoading, isDebouncing, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, isLoading, isDebouncing, isError, fetchNextPage, hasNextPage, isFetchingNextPage } =
     useSearchGames(query);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +61,7 @@ export function SearchInput() {
         onClose={handleClose}
         results={results}
         isLoading={isLoading || isDebouncing}
+        isError={isError}
         searchQuery={query}
         fetchNextPage={fetchNextPage}
         hasNextPage={hasNextPage}

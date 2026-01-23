@@ -12,6 +12,7 @@ interface SearchModalProps {
   onClose: () => void;
   results: Game[];
   isLoading: boolean;
+  isError: boolean;
   searchQuery: string;
   fetchNextPage: () => void;
   hasNextPage: boolean;
@@ -23,6 +24,7 @@ export function SearchModal({
   onClose,
   results,
   isLoading,
+  isError,
   searchQuery,
   fetchNextPage,
   hasNextPage,
@@ -64,7 +66,11 @@ export function SearchModal({
           {/* Header */}
           <div className='flex items-center justify-between p-4 border-b border-neutral-700'>
             <h2 className='text-base md:text-lg font-semibold'>
-              {isLoading ? 'Buscando...' : `Resultados para "${searchQuery}" (${results.length})`}
+              {isLoading
+                ? 'Buscando...'
+                : isError || results.length === 0
+                  ? `Resultados para "${searchQuery}"`
+                  : `Resultados para "${searchQuery}" (${results.length})`}
             </h2>
             <Button onClick={onClose} variant='icon' size='icon'>
               <CloseIcon />
@@ -77,9 +83,12 @@ export function SearchModal({
               <div className='flex items-center justify-center py-12'>
                 <div className='w-8 h-8 border-2 border-purple-500 border-t-transparent rounded-full animate-spin' />
               </div>
-            ) : results.length === 0 ? (
-              <div className='text-center py-12 text-neutral-400'>
-                Nenhum jogo encontrado para "{searchQuery}"
+            ) : isError || results.length === 0 ? (
+              <div className='text-center py-12'>
+                <p className='text-neutral-400 text-lg'>
+                  O mundo não está preparado pra sua pesquisa ainda
+                </p>
+                <p className='text-neutral-500 text-sm mt-2'>Tente buscar por outro termo</p>
               </div>
             ) : (
               <>
