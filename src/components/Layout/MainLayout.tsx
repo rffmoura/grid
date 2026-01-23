@@ -66,7 +66,7 @@ export const MainLayout = () => {
               <CloseIcon className='w-5 h-5' />
             </button>
             <div className='flex-1'>
-              <SearchInput />
+              <SearchInput onNavigate={() => setIsMobileSearchOpen(false)} />
             </div>
           </div>
         ) : (

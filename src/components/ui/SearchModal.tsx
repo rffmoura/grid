@@ -10,6 +10,7 @@ import { CloseIcon } from '../../assets/icons/CloseIcon';
 interface SearchModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onNavigate?: () => void;
   results: Game[];
   isLoading: boolean;
   isError: boolean;
@@ -22,6 +23,7 @@ interface SearchModalProps {
 export function SearchModal({
   isOpen,
   onClose,
+  onNavigate,
   results,
   isLoading,
   isError,
@@ -95,7 +97,7 @@ export function SearchModal({
                 {/* Grid Desktop */}
                 <div className='hidden md:grid grid-cols-3 lg:grid-cols-4 gap-4'>
                   {results.map((game) => (
-                    <div key={game.id} onClick={onClose}>
+                    <div key={game.id} onClick={onNavigate}>
                       <GameCard {...game} />
                     </div>
                   ))}
@@ -129,7 +131,7 @@ export function SearchModal({
         game={selectedGame}
         isOpen={!!selectedGame}
         onClose={() => setSelectedGame(null)}
-        onNavigate={onClose}
+        onNavigate={onNavigate}
       />
     </>
   );

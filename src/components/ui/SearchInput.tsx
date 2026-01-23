@@ -3,7 +3,11 @@ import { SearchModal } from './SearchModal';
 import { useSearchGames } from '../../features/games/hooks/useSearchGames';
 import { SearchIcon } from '../../assets/icons/SearchIcon';
 
-export function SearchInput() {
+interface SearchInputProps {
+  onNavigate?: () => void;
+}
+
+export function SearchInput({ onNavigate }: SearchInputProps) {
   const [query, setQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -23,6 +27,11 @@ export function SearchInput() {
   const handleClose = () => {
     setIsModalOpen(false);
     setQuery('');
+  };
+
+  const handleNavigate = () => {
+    handleClose();
+    onNavigate?.();
   };
 
   const results = data?.pages.flatMap((page) => page.results) ?? [];
@@ -59,6 +68,7 @@ export function SearchInput() {
       <SearchModal
         isOpen={isModalOpen}
         onClose={handleClose}
+        onNavigate={handleNavigate}
         results={results}
         isLoading={isLoading || isDebouncing}
         isError={isError}
