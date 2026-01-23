@@ -9,9 +9,10 @@ interface GamePreviewModalProps {
   game: Game | null;
   isOpen: boolean;
   onClose: () => void;
+  onNavigate?: () => void;
 }
 
-export function GamePreviewModal({ game, isOpen, onClose }: GamePreviewModalProps) {
+export function GamePreviewModal({ game, isOpen, onClose, onNavigate }: GamePreviewModalProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export function GamePreviewModal({ game, isOpen, onClose }: GamePreviewModalProp
 
   const handleViewDetails = () => {
     onClose();
+    onNavigate?.();
     navigate(`/game/${game.id}`);
   };
 

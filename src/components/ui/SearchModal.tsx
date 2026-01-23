@@ -129,6 +129,7 @@ export function SearchModal({
         game={selectedGame}
         isOpen={!!selectedGame}
         onClose={() => setSelectedGame(null)}
+        onNavigate={onClose}
       />
     </>
   );
